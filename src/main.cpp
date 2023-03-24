@@ -52,7 +52,6 @@ int main (int argc, char **argv) {
     uint32_t n_rows = fm.getNumberOfRows();
 
     int * permutations[n_samples];
-    unordered_map<uint32_t, uint32_t> rev_perm[n_samples];
 
     for (int i = 0; i < n_samples; i++) {
         permutations[i] = new int[n_nodes];
@@ -74,10 +73,7 @@ int main (int argc, char **argv) {
         // permutations[i][0] = 2;
         // permutations[i][1] = 0;
         // permutations[i][2] = 1;
-        // permutations[i][3] = 3;
-        for (int j = 0; j < n_nodes; j++) {
-            rev_perm[i][permutations[i][j]] = j;
-        }
+        // permutations[i][3] = 3;        
     }
 
     cerr << "Samples Generated" << endl;
@@ -85,27 +81,32 @@ int main (int argc, char **argv) {
     double * p_vals  = new double[n_rows];
     for (int i = 0; i < n_rows; i++) p_vals[i] = 0.0;
 
-    cerr << "Maximal number of threads: " << omp_get_max_threads() << endl;
+    int n_threads = omp_get_max_threads();
 
-    omp_set_num_threads(omp_get_max_threads());
+    cerr << "Maximal number of threads: " << n_threads << endl;
+
+    omp_set_num_threads(n_threads);
+
+    unordered_map<uint32_t, uint32_t> * rev_perm;
+
+    rev_perm = new unordered_map<uint32_t, uint32_t>[n_threads];
 
     #pragma omp parallel for
-    for (int i = 0; i < n_rows; i++) {
-        // print percentage of progress [UNUSABLE WITH PARALLEL FOR]
-        // if (n_rows > 100 && i % (n_rows / 100) == 0) {
-        //     cerr << "\r" << i / (n_rows / 100) << "%";
-        // }
-        uint32_t from = fm.edges[i][0];
-        uint32_t to = fm.edges[i][1];
-        for (int j = 0; j < n_samples; j++) {
-            uint32_t from_perm = rev_perm[j][from];
+    for (int j = 0; j < n_samples; j++) {
+        int thread_id = omp_get_thread_num();
+        for (int k = 0; k < n_nodes; k++) rev_perm[thread_id][permutations[j][k]] = k;
+        for (int i = 0; i < n_rows; i++) {
+            uint32_t from = fm.edges[i][0];
+            uint32_t to = fm.edges[i][1];
+            uint32_t from_perm = rev_perm[thread_id][from];
             for (auto it = graph[from_perm].begin(); it != graph[from_perm].end(); it++) {
-                if (rev_perm[j][to] == *it) {
+                if (rev_perm[thread_id][to] == *it) {
                     p_vals[i] += 1.0 / n_samples;
                     break;
                 }
             }
         }
+        rev_perm[thread_id].clear();
     }
 
     int cnt = 0;
@@ -122,6 +123,8 @@ int main (int argc, char **argv) {
 
     for (int i = 0; i < n_samples; i++) 
         delete[] permutations[i];    
+
+    delete[] p_vals;
 
     return 0;
 }
