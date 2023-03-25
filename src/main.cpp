@@ -10,6 +10,7 @@
 
 #include "FileManager.hpp"
 #include "InputParser.hpp"
+#include "ShufflingStrategies.hpp"
 
 using namespace std;
 
@@ -51,11 +52,12 @@ int main (int argc, char **argv) {
 
     uint32_t n_rows = fm.getNumberOfRows();
 
-    int * permutations[n_samples];
+    uint32_t ** permutations;
 
-    for (int i = 0; i < n_samples; i++) {
-        permutations[i] = new int[n_nodes];
-    }
+    permutations = new uint32_t * [n_samples];
+
+    for (int i = 0; i < n_samples; i++) permutations[i] = new uint32_t[n_nodes];
+    
 
     for (int i = 0; i < n_samples; i++)
         for (int j = 0; j < n_nodes; j++) 
@@ -68,13 +70,16 @@ int main (int argc, char **argv) {
     // std::mt19937 gen(seed); //Standard mersenne_twister_engine seeded with rd()
     std::mt19937 gen(rd()); 
 
-    for (int i = 0; i < n_samples; i++){
-        shuffle(permutations[i], permutations[i] + n_nodes, gen);
+    simple_strategy(permutations, n_nodes, n_samples, gen);
+    // level_strategy(permutations, fm.levels, n_nodes, n_samples, gen);
+
+    // for (int i = 0; i < n_samples; i++){
+        // shuffle(permutations[i], permutations[i] + n_nodes, gen);
         // permutations[i][0] = 2;
         // permutations[i][1] = 0;
         // permutations[i][2] = 1;
         // permutations[i][3] = 3;        
-    }
+    // }
 
     cerr << "Samples Generated" << endl;
 
@@ -82,6 +87,7 @@ int main (int argc, char **argv) {
     for (int i = 0; i < n_rows; i++) p_vals[i] = 0.0;
 
     int n_threads = omp_get_max_threads();
+    // int n_threads = 1;
 
     cerr << "Maximal number of threads: " << n_threads << endl;
 
@@ -101,6 +107,7 @@ int main (int argc, char **argv) {
             uint32_t from_perm = rev_perm[thread_id][from];
             for (auto it = graph[from_perm].begin(); it != graph[from_perm].end(); it++) {
                 if (rev_perm[thread_id][to] == *it) {
+                    #pragma omp atomic
                     p_vals[i] += 1.0 / n_samples;
                     break;
                 }
@@ -124,7 +131,9 @@ int main (int argc, char **argv) {
     for (int i = 0; i < n_samples; i++) 
         delete[] permutations[i];    
 
+    delete[] permutations;
     delete[] p_vals;
+    delete[] rev_perm;
 
     return 0;
 }
