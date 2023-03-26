@@ -4,3 +4,4 @@ obj
 bin
 input
 out
+*.sh

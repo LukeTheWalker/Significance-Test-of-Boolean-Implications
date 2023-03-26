@@ -35,3 +35,15 @@ void level_strategy(uint32_t ** permutation, vector<bool> levels, uint32_t n_nod
         }
     }
 }
+
+// third shuffling strategy
+// with a 0.5 probability every label can be assigned to another node having the same label
+// constraints: number of high and low rests the same and avoid creating new couples
+
+void flip_stategy(uint32_t ** permutation, vector<bool> levels, uint32_t n_nodes, uint32_t n_samples, std::mt19937 &gen) {
+    for (uint32_t i = 0; i < n_samples; i++) {
+        for (uint32_t j = 0; j < n_nodes; j++) {
+            
+        }
+    }
+}

@@ -6,6 +6,7 @@
 #include <random>
 #include <chrono>
 #include <omp.h>
+#include <string.h>
 
 
 #include "FileManager.hpp"
@@ -67,8 +68,8 @@ int main (int argc, char **argv) {
 
     std::random_device rd;  //Will be used to obtain a seed for the random number engine
     unsigned seed = 42;
-    // std::mt19937 gen(seed); //Standard mersenne_twister_engine seeded with rd()
-    std::mt19937 gen(rd()); 
+    std::mt19937 gen(seed); //Standard mersenne_twister_engine seeded with rd()
+    // std::mt19937 gen(rd()); 
 
     simple_strategy(permutations, n_nodes, n_samples, gen);
     // level_strategy(permutations, fm.levels, n_nodes, n_samples, gen);
@@ -93,13 +94,14 @@ int main (int argc, char **argv) {
 
     omp_set_num_threads(n_threads);
 
-    unordered_map<uint32_t, uint32_t> * rev_perm;
+    uint32_t ** rev_perm;
 
-    rev_perm = new unordered_map<uint32_t, uint32_t>[n_threads];
+    rev_perm = new uint32_t * [n_threads];
 
     #pragma omp parallel for
     for (int j = 0; j < n_samples; j++) {
         int thread_id = omp_get_thread_num();
+        rev_perm[thread_id] = new uint32_t[n_nodes];
         for (int k = 0; k < n_nodes; k++) rev_perm[thread_id][permutations[j][k]] = k;
         for (int i = 0; i < n_rows; i++) {
             uint32_t from = fm.edges[i][0];
@@ -113,7 +115,7 @@ int main (int argc, char **argv) {
                 }
             }
         }
-        rev_perm[thread_id].clear();
+        memset(rev_perm[thread_id], 0, n_nodes * sizeof(uint32_t));
     }
 
     int cnt = 0;
