@@ -55,16 +55,22 @@ int main (int argc, char **argv) {
 
     uint32_t n_rows = fm.getNumberOfRows();
 
-    uint32_t ** permutations;
+    uint32_t ** permutations_labels, ** permutations_levels;
 
-    permutations = new uint32_t * [n_samples];
+    permutations_labels = new uint32_t * [n_samples];
+    permutations_levels = new uint32_t * [n_samples];
 
-    for (int i = 0; i < n_samples; i++) permutations[i] = new uint32_t[n_nodes];
+    for (int i = 0; i < n_samples; i++) { 
+        permutations_labels[i] = new uint32_t[n_nodes]; 
+        permutations_levels[i] = new uint32_t[n_nodes];
+    }
     
 
     for (int i = 0; i < n_samples; i++)
-        for (int j = 0; j < n_nodes; j++) 
-            permutations[i][j] = j;
+        for (int j = 0; j < n_nodes; j++) {
+            permutations_labels[i][j] = j;
+            permutations_levels[i][j] = j;
+        }
 
     cerr << "Samples Initialized" << endl;
 
@@ -74,7 +80,7 @@ int main (int argc, char **argv) {
     // std::mt19937 gen(rd()); 
 
 #if not TEST
-    simple_strategy(permutations, n_nodes, n_samples, gen);
+    simple_strategy(permutations_labels, n_nodes, n_samples, gen);
     // level_strategy(permutations, fm.levels, n_nodes, n_samples, gen);
     int n_threads = omp_get_max_threads();
 
@@ -102,8 +108,8 @@ int main (int argc, char **argv) {
         uint32_t * rev_perm = new uint32_t[n_expr * 2];
         memset(rev_perm, -1, n_expr * sizeof(uint32_t) * 2);
         for (int k = 0; k < n_nodes; k++) {
-            bool is_high = fm.levels[permutations[j][k]];
-            uint32_t label = fm.labels[permutations[j][k]];
+            bool is_high = fm.levels[permutations_labels[j][k]];
+            uint32_t label = fm.labels[permutations_labels[j][k]];
             rev_perm[label + (n_expr * is_high) ] = k;
         }
         #if TEST
@@ -129,7 +135,7 @@ int main (int argc, char **argv) {
                 for (auto it = graph[node_from_permutated].begin(); it != graph[node_from_permutated].end(); it++) {
                     uint32_t label_to_og = fm.labels[node_to_og];
                     uint32_t level_to_og = fm.levels[node_to_og];
-                    uint32_t node_to_permutated = permutations[j][*it];
+                    uint32_t node_to_permutated = permutations_labels[j][*it];
                     uint32_t label_to_permutated = fm.labels[node_to_permutated];
                     uint32_t level_to_permutated = fm.levels[*it];
                     if (label_to_permutated == label_to_og &&
@@ -157,9 +163,9 @@ int main (int argc, char **argv) {
     cerr << "Number of significant edges: " << cnt << " out of " << n_rows << " percent: " << (double) cnt / n_rows << endl;
 
     for (int i = 0; i < n_samples; i++) 
-        delete[] permutations[i];    
+        delete[] permutations_labels[i];    
 
-    delete[] permutations;
+    delete[] permutations_labels;
     delete[] p_vals;
 
     return 0;
