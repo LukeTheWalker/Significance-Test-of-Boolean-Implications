@@ -1,3 +1,5 @@
+#define TEST 0
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -71,51 +73,75 @@ int main (int argc, char **argv) {
     std::mt19937 gen(seed); //Standard mersenne_twister_engine seeded with rd()
     // std::mt19937 gen(rd()); 
 
+#if not TEST
     simple_strategy(permutations, n_nodes, n_samples, gen);
     // level_strategy(permutations, fm.levels, n_nodes, n_samples, gen);
+    int n_threads = omp_get_max_threads();
 
-    // for (int i = 0; i < n_samples; i++){
-        // shuffle(permutations[i], permutations[i] + n_nodes, gen);
-        // permutations[i][0] = 2;
-        // permutations[i][1] = 0;
-        // permutations[i][2] = 1;
-        // permutations[i][3] = 3;        
-    // }
+#else
+    for (int i = 0; i < n_samples; i++){
+        permutations[i][0] = 2;
+        permutations[i][1] = 1;
+        permutations[i][2] = 3;
+        permutations[i][3] = 0; 
+    }
+    int n_threads = 1;
+#endif
 
     cerr << "Samples Generated" << endl;
 
     double * p_vals  = new double[n_rows];
     for (int i = 0; i < n_rows; i++) p_vals[i] = 0.0;
 
-    int n_threads = omp_get_max_threads();
-    // int n_threads = 1;
-
     cerr << "Maximal number of threads: " << n_threads << endl;
 
     omp_set_num_threads(n_threads);
 
-    uint32_t ** rev_perm;
-
-    rev_perm = new uint32_t * [n_threads];
-
     #pragma omp parallel for
     for (int j = 0; j < n_samples; j++) {
-        int thread_id = omp_get_thread_num();
-        rev_perm[thread_id] = new uint32_t[n_nodes];
-        for (int k = 0; k < n_nodes; k++) rev_perm[thread_id][permutations[j][k]] = k;
+        uint32_t * rev_perm = new uint32_t[n_expr * 2];
+        memset(rev_perm, -1, n_expr * sizeof(uint32_t) * 2);
+        for (int k = 0; k < n_nodes; k++) {
+            bool is_high = fm.levels[permutations[j][k]];
+            uint32_t label = fm.labels[permutations[j][k]];
+            rev_perm[label + (n_expr * is_high) ] = k;
+        }
+        #if TEST
+        // print rev_perm
+        for (int i = 0; i < n_expr; i++) {
+            cerr << "Expr " << fm.exprs[i] << ": ";
+            for (int high = 0; high < 2; high++){
+                if (rev_perm[i + (n_expr * high)] != -1) {
+                    cerr << rev_perm[i + (n_expr * high)] << " ";
+                }
+            }
+            cerr << endl;
+        }
+        #endif
         for (int i = 0; i < n_rows; i++) {
-            uint32_t from = fm.edges[i][0];
-            uint32_t to = fm.edges[i][1];
-            uint32_t from_perm = rev_perm[thread_id][from];
-            for (auto it = graph[from_perm].begin(); it != graph[from_perm].end(); it++) {
-                if (rev_perm[thread_id][to] == *it) {
-                    #pragma omp atomic
-                    p_vals[i] += 1.0 / n_samples;
-                    break;
+            uint32_t node_from_og = fm.edges[i][0];
+            uint32_t node_to_og   = fm.edges[i][1];
+            uint32_t label_from_og = fm.labels[node_from_og];
+            uint32_t level_from_og = fm.levels[node_from_og];
+            for (int high = 0; high < 2; high++){
+                uint32_t node_from_permutated = rev_perm[label_from_og + (n_expr * high)];
+                if (node_from_permutated == -1 || fm.levels[node_from_permutated] != level_from_og) continue;
+                for (auto it = graph[node_from_permutated].begin(); it != graph[node_from_permutated].end(); it++) {
+                    uint32_t label_to_og = fm.labels[node_to_og];
+                    uint32_t level_to_og = fm.levels[node_to_og];
+                    uint32_t node_to_permutated = permutations[j][*it];
+                    uint32_t label_to_permutated = fm.labels[node_to_permutated];
+                    uint32_t level_to_permutated = fm.levels[*it];
+                    if (label_to_permutated == label_to_og &&
+                        level_to_permutated == level_to_og) {
+                        #pragma omp atomic
+                        p_vals[i] += 1.0 / n_samples;
+                        break;
+                    }
                 }
             }
         }
-        memset(rev_perm[thread_id], 0, n_nodes * sizeof(uint32_t));
+        delete[] rev_perm;
     }
 
     int cnt = 0;
@@ -135,7 +161,6 @@ int main (int argc, char **argv) {
 
     delete[] permutations;
     delete[] p_vals;
-    delete[] rev_perm;
 
     return 0;
 }
