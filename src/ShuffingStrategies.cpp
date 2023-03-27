@@ -49,12 +49,15 @@ void shuffle_level_strategy(uint32_t ** permutations_levels, uint32_t n_nodes, u
 // fourth shuffling strategy
 // every label appears twice in the permutation, with .5 probability the levels of the tow labels are swapped
 // constraints: number of high and low rests the same and avoid creating new couples
-void flip_level_strategy(uint32_t ** permutations_labels, vector<bool>& levels, uint32_t n_nodes, uint32_t n_samples, std::mt19937 &gen) {
+void flip_level_strategy(uint32_t ** permutations_levels, vector<bool>& levels, uint32_t n_nodes, uint32_t n_samples, std::mt19937 &gen) {
+    uint32_t low_index = find(levels.begin(), levels.end(), false) - levels.begin();
+    uint32_t high_index = find(levels.begin(), levels.end(), true) - levels.begin();
     for (uint32_t i = 0; i < n_samples; i++) {
         for (uint32_t j = 0; j < n_nodes; j++) {
-            if (gen() % 2) {
-                if (levels[j]) levels[j] = false;
-                else levels[j] = true;
+            int rnd = gen();
+            if (rnd % 2) {
+                if (levels[j]) permutations_levels[i][j] = low_index;
+                else permutations_levels[i][j] = high_index;
             }
         }
     }
@@ -73,7 +76,7 @@ bool dispatch_strategy(uint32_t ** permutations_labels, uint32_t ** permutations
             shuffle_level_strategy(permutations_levels, n_nodes, n_samples, gen);
             return true;
         case FLIP_LEVEL_STRATEGY:
-            flip_level_strategy(permutations_labels, levels, n_nodes, n_samples, gen);
+            flip_level_strategy(permutations_levels, levels, n_nodes, n_samples, gen);
             return true;
         default:
             cerr << "Error: invalid strategy" << endl;
