@@ -19,7 +19,7 @@ using namespace std;
 
 void parse_arguments(int argc, char * argv[], string & implication_file, string& significance_file, uint32_t & n_samples, double & p_value_threshold, int& strategy_n){
     InputParser pars(argc, argv);
-    string strategy = "simple";
+    string strategy = "free";
 
     if (pars.cmdOptionExists("-h") || !pars.cmdOptionExists("-i")) {cerr << "Usage: " << argv[0] << " -i <expression_file> -s <statistic_threshold> -p <p-value_threshold> -o <implication_file>" << endl; exit(0);}
     if (pars.cmdOptionExists("-i")) implication_file = pars.getCmdOption("-i");  else cerr << "Warning: no expression file specified, using default: " << implication_file << endl;
@@ -27,6 +27,7 @@ void parse_arguments(int argc, char * argv[], string & implication_file, string&
     if (pars.cmdOptionExists("-p")) p_value_threshold = stod(pars.getCmdOption("-p"));  else cerr << "Warning: no p-value threshold specified, using default: " << p_value_threshold << endl;
     if (pars.cmdOptionExists("-o")) significance_file = pars.getCmdOption("-o");  else cerr << "Warning: no significance file specified, using default: " << significance_file << endl;
     if (pars.cmdOptionExists("-s")) strategy = pars.getCmdOption("-s");  else cerr << "Warning: no shuffling strategy specified, using default: " << strategy << endl;    
+    cerr << "Strategy: " << strategy << endl;
     strategy_n = get_strategy_num(strategy);
 }
 

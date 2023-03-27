@@ -78,7 +78,6 @@ void flip_level_strategy(uint32_t ** permutations_levels, vector<uint32_t>& labe
 
 // return true if the strategy is applied to the levels
 void dispatch_strategy(uint32_t ** permutations_labels, uint32_t ** permutations_levels, vector<uint32_t>& labels, vector<bool>& levels, uint32_t n_nodes, uint32_t n_expr, uint32_t n_samples, std::mt19937 &gen, uint32_t strategy) {
-    cerr << "strategy: " << strategy << endl;
     switch (strategy) {
         case FREE_STRATEGY:
             free_shuffle_strategy(permutations_labels, permutations_levels, n_nodes, n_samples, gen);
