@@ -40,7 +40,7 @@ int main (int argc, char **argv) {
     string significance_file = "out/significance.txt";
     uint32_t n_samples = 1000;
     double p_value_threshold = 0.05;
-    int strategy = SIMPLE_STRATEGY;
+    int strategy = FREE_STRATEGY;
     parse_arguments(argc, argv, implication_file, significance_file, n_samples, p_value_threshold, strategy);
 
     FileManager fm;
@@ -84,7 +84,7 @@ int main (int argc, char **argv) {
     // std::mt19937 gen(rd()); 
 
 #if not TEST
-    dispatch_strategy(permutations_labels, permutations_levels, fm.labels, fm.levels, n_nodes, n_samples, gen, strategy);
+    dispatch_strategy(permutations_labels, permutations_levels, fm.labels, fm.levels, n_nodes, n_expr, n_samples, gen, strategy);
     int n_threads = omp_get_max_threads();
 #else
     for (int i = 0; i < n_samples; i++){
