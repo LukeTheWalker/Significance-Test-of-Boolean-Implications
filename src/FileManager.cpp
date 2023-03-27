@@ -59,12 +59,19 @@ void FileManager::readFile(string file){
     string line;
     string delimiter = "\t";
 
+    ifstream in(file);
+    if (!in.is_open()){
+        cerr << "Could not open file " << file << endl;
+        exit(1);
+    }
+    in.close();
+
     n_columns = getNumberOfColumns(file);
     n_rows = getNumberOfRows(file) - 1; // accounting for header
 
     edges = static_cast<uint32_t (*)[2]>(std::malloc(n_rows * sizeof(*edges)));
 
-    ifstream in(file);
+    in.open(file);
 
     cerr << "Reading file with " << n_rows << " rows and " << n_columns << " columns" << endl;
 
