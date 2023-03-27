@@ -111,7 +111,7 @@ int main (int argc, char **argv) {
         uint32_t * rev_perm = new uint32_t[n_expr * 2];
         memset(rev_perm, -1, n_expr * sizeof(uint32_t) * 2);
         for (int k = 0; k < n_nodes; k++) {
-            bool is_high = fm.levels[permutations_labels[j][k]];
+            bool is_high = fm.levels[permutations_levels[j][k]];
             uint32_t label = fm.labels[permutations_labels[j][k]];
             rev_perm[label + (n_expr * is_high) ] = k;
         }
