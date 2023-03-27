@@ -80,3 +80,15 @@ bool dispatch_strategy(uint32_t ** permutations_labels, uint32_t ** permutations
             exit (EXIT_FAILURE);
     }
 }
+
+// return the number of strategies
+int get_strategy_num (string strategy) {
+    if (strategy == "simple") return SIMPLE_STRATEGY;
+    else if (strategy == "equal") return EQUAL_LEVEL_STRATEGY;
+    else if (strategy == "shuffle") return SHUFFLE_LEVEL_STRATEGY;
+    else if (strategy == "flip") return FLIP_LEVEL_STRATEGY;
+    else {
+        cerr << "Error: invalid strategy" << endl;
+        exit (EXIT_FAILURE);
+    }
+}

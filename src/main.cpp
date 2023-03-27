@@ -17,14 +17,17 @@
 
 using namespace std;
 
-void parse_arguments(int argc, char * argv[], string & implication_file, string& significance_file, uint32_t & n_samples, double & p_value_threshold) {
+void parse_arguments(int argc, char * argv[], string & implication_file, string& significance_file, uint32_t & n_samples, double & p_value_threshold, int& strategy_n){
     InputParser pars(argc, argv);
+    string strategy = "simple";
 
     if (pars.cmdOptionExists("-h") || !pars.cmdOptionExists("-i")) {cerr << "Usage: " << argv[0] << " -i <expression_file> -s <statistic_threshold> -p <p-value_threshold> -o <implication_file>" << endl; exit(0);}
     if (pars.cmdOptionExists("-i")) implication_file = pars.getCmdOption("-i");  else cerr << "Warning: no expression file specified, using default: " << implication_file << endl;
     if (pars.cmdOptionExists("-ns")) n_samples = stoi(pars.getCmdOption("-ns"));  else cerr << "Warning: no number of samples specified, using default: " << n_samples << endl;
     if (pars.cmdOptionExists("-p")) p_value_threshold = stod(pars.getCmdOption("-p"));  else cerr << "Warning: no p-value threshold specified, using default: " << p_value_threshold << endl;
     if (pars.cmdOptionExists("-o")) significance_file = pars.getCmdOption("-o");  else cerr << "Warning: no significance file specified, using default: " << significance_file << endl;
+    if (pars.cmdOptionExists("-s")) strategy = pars.getCmdOption("-s");  else cerr << "Warning: no shuffling strategy specified, using default: " << strategy << endl;    
+    strategy_n = get_strategy_num(strategy);
 }
 
 int main (int argc, char **argv) {
@@ -37,7 +40,8 @@ int main (int argc, char **argv) {
     string significance_file = "out/significance.txt";
     uint32_t n_samples = 1000;
     double p_value_threshold = 0.05;
-    parse_arguments(argc, argv, implication_file, significance_file, n_samples, p_value_threshold);
+    int strategy = SIMPLE_STRATEGY;
+    parse_arguments(argc, argv, implication_file, significance_file, n_samples, p_value_threshold, strategy);
 
     FileManager fm;
     fm.readFile(implication_file);
@@ -46,7 +50,7 @@ int main (int argc, char **argv) {
     uint32_t n_nodes = node_map.size();
     cerr << "Number of nodes: " << n_nodes << endl;
 
-    unordered_map<string, uint32_t> &expr_map     = fm.expr_map;
+    unordered_map<string, uint32_t> &expr_map = fm.expr_map;
     uint32_t n_expr = expr_map.size();
 
     cerr << "Number of expressions: " << n_expr << endl;
@@ -80,9 +84,8 @@ int main (int argc, char **argv) {
     // std::mt19937 gen(rd()); 
 
 #if not TEST
-    dispatch_strategy(permutations_labels, permutations_levels, fm.labels, fm.levels, n_nodes, n_samples, gen, FLIP_LEVEL_STRATEGY);
+    dispatch_strategy(permutations_labels, permutations_levels, fm.labels, fm.levels, n_nodes, n_samples, gen, strategy);
     int n_threads = omp_get_max_threads();
-
 #else
     for (int i = 0; i < n_samples; i++){
         permutations[i][0] = 2;

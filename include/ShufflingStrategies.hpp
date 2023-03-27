@@ -10,5 +10,6 @@
 #include <vector>
 
 bool dispatch_strategy(uint32_t ** permutations_labels, uint32_t ** permutations_levels, std::vector<uint32_t>& labels, std::vector<bool>& levels, uint32_t n_nodes, uint32_t n_samples, std::mt19937 &gen, uint32_t strategy);
+int get_strategy_num (std::string strategy);
 
 #endif // SHUFFLINGSTRATEGIES_HPP
