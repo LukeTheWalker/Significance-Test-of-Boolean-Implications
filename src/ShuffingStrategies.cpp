@@ -18,7 +18,7 @@ void simple_strategy(uint32_t ** permutations_labels, uint32_t n_nodes, uint32_t
 // every label can be assigned to any node having the same level
 // constraints: number of high and low rests the same and avoid creating new couples
 
-void level_strategy(uint32_t ** permutations_labels, vector<bool>& levels, uint32_t n_nodes, uint32_t n_samples, std::mt19937 &gen) {
+void equal_level_strategy(uint32_t ** permutations_labels, vector<bool>& levels, uint32_t n_nodes, uint32_t n_samples, std::mt19937 &gen) {
     vector<uint32_t> high_nodes;
     vector<uint32_t> low_nodes;
     for (uint32_t i = 0; i < n_nodes; i++) {
@@ -38,13 +38,24 @@ void level_strategy(uint32_t ** permutations_labels, vector<bool>& levels, uint3
 }
 
 // third shuffling strategy
-// with a 0.5 probability every label can be assigned to another node having the same label
+// shuffle level strategy
 // constraints: number of high and low rests the same and avoid creating new couples
 
-void flip_stategy(uint32_t ** permutations_levels, vector<bool> levels, uint32_t n_nodes, uint32_t n_samples, std::mt19937 &gen) {
+void shuffle_level_strategy(uint32_t ** permutations_levels, uint32_t n_nodes, uint32_t n_samples, std::mt19937 &gen) {
+    for (uint32_t i = 0; i < n_samples; i++) 
+        shuffle(permutations_levels[i], permutations_levels[i] + n_nodes, gen);
+}
+
+// fourth shuffling strategy
+// every label appears twice in the permutation, with .5 probability the levels of the tow labels are swapped
+// constraints: number of high and low rests the same and avoid creating new couples
+void flip_level_strategy(uint32_t ** permutations_labels, vector<bool>& levels, uint32_t n_nodes, uint32_t n_samples, std::mt19937 &gen) {
     for (uint32_t i = 0; i < n_samples; i++) {
         for (uint32_t j = 0; j < n_nodes; j++) {
-            
+            if (gen() % 2) {
+                if (levels[j]) levels[j] = false;
+                else levels[j] = true;
+            }
         }
     }
 }
@@ -55,11 +66,14 @@ bool dispatch_strategy(uint32_t ** permutations_labels, uint32_t ** permutations
         case SIMPLE_STRATEGY:
             simple_strategy(permutations_labels, n_nodes, n_samples, gen);
             return false;
-        case LEVEL_STRATEGY:
-            level_strategy(permutations_labels, levels, n_nodes, n_samples, gen);
+        case EQUAL_LEVEL_STRATEGY:
+            equal_level_strategy(permutations_labels, levels, n_nodes, n_samples, gen);
             return false;
-        case FLIP_STRATEGY:
-            flip_stategy(permutations_labels, levels, n_nodes, n_samples, gen);
+        case SHUFFLE_LEVEL_STRATEGY:
+            shuffle_level_strategy(permutations_levels, n_nodes, n_samples, gen);
+            return true;
+        case FLIP_LEVEL_STRATEGY:
+            flip_level_strategy(permutations_labels, levels, n_nodes, n_samples, gen);
             return true;
         default:
             cerr << "Error: invalid strategy" << endl;

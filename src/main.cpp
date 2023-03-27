@@ -80,8 +80,7 @@ int main (int argc, char **argv) {
     // std::mt19937 gen(rd()); 
 
 #if not TEST
-    simple_strategy(permutations_labels, n_nodes, n_samples, gen);
-    // level_strategy(permutations, fm.levels, n_nodes, n_samples, gen);
+    dispatch_strategy(permutations_labels, permutations_levels, fm.labels, fm.levels, n_nodes, n_samples, gen, FLIP_LEVEL_STRATEGY);
     int n_threads = omp_get_max_threads();
 
 #else
@@ -131,13 +130,13 @@ int main (int argc, char **argv) {
             uint32_t level_from_og = fm.levels[node_from_og];
             for (int high = 0; high < 2; high++){
                 uint32_t node_from_permutated = rev_perm[label_from_og + (n_expr * high)];
-                if (node_from_permutated == -1 || fm.levels[node_from_permutated] != level_from_og) continue;
+                if (node_from_permutated == -1 || fm.levels[permutations_levels[j][node_from_permutated]] != level_from_og) continue;
                 for (auto it = graph[node_from_permutated].begin(); it != graph[node_from_permutated].end(); it++) {
                     uint32_t label_to_og = fm.labels[node_to_og];
                     uint32_t level_to_og = fm.levels[node_to_og];
                     uint32_t node_to_permutated = permutations_labels[j][*it];
                     uint32_t label_to_permutated = fm.labels[node_to_permutated];
-                    uint32_t level_to_permutated = fm.levels[*it];
+                    uint32_t level_to_permutated = fm.levels[permutations_levels[j][*it]];
                     if (label_to_permutated == label_to_og &&
                         level_to_permutated == level_to_og) {
                         #pragma omp atomic
