@@ -117,7 +117,7 @@ int main (int argc, char **argv) {
         }
         #if TEST
         // print rev_perm
-        cerr << "reverse permutation:" ;
+        cerr << "reverse permutation:" << endl;
         for (int i = 0; i < n_expr; i++) {
             cerr << "Expr " << fm.exprs[i] << ": ";
             for (int high = 0; high < 2; high++){
