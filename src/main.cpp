@@ -88,12 +88,12 @@ int main (int argc, char **argv) {
     dispatch_strategy(permutations_labels, permutations_levels, fm.labels, fm.levels, n_nodes, n_expr, n_samples, gen, strategy);
     int n_threads = omp_get_max_threads();
 #else
-    for (int i = 0; i < n_samples; i++){
-        permutations[i][0] = 2;
-        permutations[i][1] = 1;
-        permutations[i][2] = 3;
-        permutations[i][3] = 0; 
-    }
+    ifstream in("input/permutations.txt");
+    if (!in.is_open()) { cerr << "Error opening permutations file" << endl; exit(1); }
+    for (int i = 0; i < n_samples; i++) 
+        for (int j = 0; j < n_nodes; j++) 
+            in >> permutations_labels[i][j];
+    in.close();
     int n_threads = 1;
 #endif
 
@@ -117,6 +117,7 @@ int main (int argc, char **argv) {
         }
         #if TEST
         // print rev_perm
+        cerr << "reverse permutation:" ;
         for (int i = 0; i < n_expr; i++) {
             cerr << "Expr " << fm.exprs[i] << ": ";
             for (int high = 0; high < 2; high++){
