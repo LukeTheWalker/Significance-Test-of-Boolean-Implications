@@ -111,18 +111,18 @@ int main (int argc, char **argv) {
         uint32_t * rev_perm = new uint32_t[n_expr * 2];
         memset(rev_perm, -1, n_expr * sizeof(uint32_t) * 2);
         for (int k = 0; k < n_nodes; k++) {
-            bool is_high = fm.levels[permutations_levels[j][k]];
             uint32_t label = fm.labels[permutations_labels[j][k]];
-            rev_perm[label + (n_expr * is_high) ] = k;
+            int twice = rev_perm[label * 2] == -1 ? 0 : 1;
+            rev_perm[label * 2 + twice] = k;
         }
         #if TEST
         // print rev_perm
         cerr << "reverse permutation:" << endl;
         for (int i = 0; i < n_expr; i++) {
             cerr << "Expr " << fm.exprs[i] << ": ";
-            for (int high = 0; high < 2; high++){
-                if (rev_perm[i + (n_expr * high)] != -1) {
-                    cerr << rev_perm[i + (n_expr * high)] << " ";
+            for (int twice = 0; twice < 2; twice++){
+                if (rev_perm[i * 2 + twice] != -1) {
+                    cerr << rev_perm[i * 2 + twice] << " ";
                 }
             }
             cerr << endl;
@@ -133,8 +133,8 @@ int main (int argc, char **argv) {
             uint32_t node_to_og   = fm.edges[i][1];
             uint32_t label_from_og = fm.labels[node_from_og];
             uint32_t level_from_og = fm.levels[node_from_og];
-            for (int high = 0; high < 2; high++){
-                uint32_t node_from_permutated = rev_perm[label_from_og + (n_expr * high)];
+            for (int twice = 0; twice < 2; twice++){
+                uint32_t node_from_permutated = rev_perm[label_from_og * 2 + twice];
                 if (node_from_permutated == -1 || fm.levels[permutations_levels[j][node_from_permutated]] != level_from_og) continue;
                 for (auto it = graph[node_from_permutated].begin(); it != graph[node_from_permutated].end(); it++) {
                     uint32_t label_to_og = fm.labels[node_to_og];
